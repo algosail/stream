@@ -1,0 +1,47 @@
+{
+  "name": "@algosail/stream",
+  "version": "0.1.0",
+  "description": "Reactive stream library. Streams are lazy, pull-on-subscribe, and async-by-default.",
+  "author": "algosail",
+  "license": "MIT",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
+  },
+  "imports": {
+    "#env": {
+      "bare": "./bare-env.js",
+      "default": "./default-env.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "bare-env.js",
+    "default-env.js"
+  ],
+  "dependencies": {
+    "@algosail/fn": "0.1.0",
+    "@algosail/maybe": "0.1.0",
+    "@algosail/either": "0.1.0",
+    "@algosail/array": "0.1.0",
+    "@algosail/pair": "0.1.0",
+    "bare-timers": "^3.0.0",
+    "bare-queue-microtask": "^1.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/algosail/stream.git"
+  },
+  "bugs": {
+    "url": "https://github.com/algosail/stream/issues"
+  },
+  "homepage": "https://github.com/algosail/stream#readme",
+  "prettier": {
+    "singleQuote": true,
+    "semi": false
+  }
+}

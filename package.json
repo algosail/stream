@@ -1,32 +1,35 @@
 {
   "name": "@algosail/stream",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Reactive stream library. Streams are lazy, pull-on-subscribe, and async-by-default.",
   "author": "algosail",
   "license": "MIT",
   "type": "module",
+  "scripts": {
+    "test": "brittle test/**/*.test.js"
+  },
   "exports": {
-    ".": "./index.js"
+    ".": "./lib/stream.js"
   },
   "imports": {
     "#env": {
-      "bare": "./bare-env.js",
-      "default": "./default-env.js"
+      "bare": "./env/bare-env.js",
+      "default": "./env/default-env.js"
     }
   },
   "files": [
     "index.js",
-    "index.d.ts",
     "bare-env.js",
     "default-env.js"
   ],
   "dependencies": {
-    "@algosail/sail": "0.1.0",
-    "bare-timers": "^3.0.0",
-    "bare-queue-microtask": "^1.0.0"
+    "@algosail/sail": "0.2.0",
+    "bare-queue-microtask": "^1.0.0",
+    "bare-timers": "^3.0.0"
   },
   "devDependencies": {
     "@stylistic/eslint-plugin": "^4.0.0",
+    "brittle": "^3.19.1",
     "eslint": "^9.0.0"
   },
   "repository": {

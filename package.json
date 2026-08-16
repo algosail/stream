@@ -1,6 +1,6 @@
 {
   "name": "@algosail/stream",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Reactive stream library. Streams are lazy, pull-on-subscribe, and async-by-default.",
   "author": "algosail",
   "license": "MIT",

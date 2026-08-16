@@ -689,6 +689,143 @@ test ('hold emits last value to new subscribers', async (t) => {
   t.alike (results2, [2])
 })
 
+test ('hold does not deliver twice to a sink subscribing during an emission', async (t) => {
+  const [strm, dispatch] = S.bus ()
+  const held = S.hold (strm)
+
+  const seen = []
+  S.forEach ((v) => {
+    seen.push (`outer:${v}`)
+    S.forEach ((x) => seen.push (`inner:${x}`)) (held)
+  }) (held)
+
+  dispatch (1)
+
+  await new Promise ((resolve) => setTimeout (resolve, 10))
+
+  // The inner sink gets the replay from hold's subscribe path, and nothing more
+  t.alike (seen, ['outer:1', 'inner:1'])
+})
+
+test ('hold ends a sink subscribing during the end exactly once', async (t) => {
+  let emit = null
+  const source = S.stream ((snk) => {
+    emit = snk
+    return S.disposeNone ()
+  })
+  const held = S.hold (source)
+
+  const seen = []
+  S.forEach (
+    (v) => seen.push (`outer:${v}`),
+    () => {
+      seen.push ('outer:end')
+      S.forEach (
+        (x) => seen.push (`inner:${x}`),
+        () => seen.push ('inner:end'),
+      ) (held)
+    },
+  ) (held)
+
+  emit.event (1)
+  emit.end ()
+
+  await new Promise ((resolve) => setTimeout (resolve, 10))
+
+  // The inner sink takes the already-finished path: replay then end, once each
+  t.alike (seen, ['outer:1', 'outer:end', 'inner:1', 'inner:end'])
+})
+
+test ('multicast does not deliver to a sink subscribing during an emission', async (t) => {
+  const [strm, dispatch] = S.bus ()
+  const shared = S.multicast (strm)
+
+  const seen = []
+  S.forEach ((v) => {
+    seen.push (`outer:${v}`)
+    S.forEach ((x) => seen.push (`inner:${x}`)) (shared)
+  }) (shared)
+
+  dispatch (1)
+
+  await new Promise ((resolve) => setTimeout (resolve, 10))
+
+  // multicast has no replay, so the inner sink must miss the value it subscribed after
+  t.alike (seen, ['outer:1'])
+
+  dispatch (2)
+
+  await new Promise ((resolve) => setTimeout (resolve, 10))
+
+  // ...but it is subscribed, so it sees the next one (and adds one more inner sink)
+  t.ok (seen.includes ('inner:2'))
+})
+
+test ('multicast does not end a sink subscribing during the end', async (t) => {
+  let emit = null
+  const source = S.stream ((snk) => {
+    emit = snk
+    return S.disposeNone ()
+  })
+  const shared = S.multicast (source)
+
+  const seen = []
+  S.forEach (
+    () => {},
+    () => {
+      seen.push ('outer:end')
+      S.forEach (
+        () => {},
+        () => seen.push ('inner:end'),
+      ) (shared)
+    },
+  ) (shared)
+
+  emit.end ()
+
+  await new Promise ((resolve) => setTimeout (resolve, 10))
+
+  // The in-flight end loop must not reach a sink registered after it started
+  t.alike (seen, ['outer:end'])
+})
+
+test ('bus does not deliver to a sink subscribing during a dispatch', async (t) => {
+  const [strm, dispatch] = S.bus ()
+
+  const seen = []
+  S.forEach ((v) => {
+    seen.push (`outer:${v}`)
+    S.forEach ((x) => seen.push (`inner:${x}`)) (strm)
+  }) (strm)
+
+  dispatch (1)
+
+  await new Promise ((resolve) => setTimeout (resolve, 10))
+
+  t.alike (seen, ['outer:1'])
+})
+
+test ('hold stops delivering to a sink disposed during an emission', async (t) => {
+  const [strm, dispatch] = S.bus ()
+  const held = S.hold (strm)
+
+  const second = []
+  let dsp = null
+
+  S.forEach (() => {
+    if (dsp !== null) S.dispose (dsp)
+  }) (held)
+
+  dsp = S.forEach ((v) => second.push (v)) (held)
+
+  dispatch (1)
+
+  await new Promise ((resolve) => setTimeout (resolve, 10))
+
+  // The second sink was removed by the first sink's handler before the dispatch reached it
+  t.alike (second, [])
+})
+
 // apply tests
 test ('apply applies functions to values', async (t) => {
   const result = await collect (
